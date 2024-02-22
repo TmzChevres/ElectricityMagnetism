@@ -47,9 +47,7 @@ void draw() {
   image(vis.getVis(), 0, 0);
   vis.draw();
   //println(sim.getElectricPotential(mousePos));
-  float potential = sim.getElectricPotential(mousePos);
-  float lerp = ((-log10(abs(potential)))-8)/(10-8);
-  //println(lerp);
+  
   
   //stroke(0);
   //line(mouseX,mouseY,mouseX+sim.getElectricField(mousePos).normalize().x*20,mouseY-sim.getElectricField(mousePos).normalize().y*20);
