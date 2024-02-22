@@ -13,19 +13,25 @@ public class Physics {
   }
 
   public boolean addObject(PhysicsObject o) {
-    return objects.add(o);
+    boolean out = objects.add(o);
+    vis.updateVisualizer();
+    return out;
   }
-  public PhysicsObject removeObject(int i){
-    if(0<i && i<objects.size()) return objects.remove(i);
+  public PhysicsObject removeObject(int i) {
+    if (0<i && i<objects.size()) return objects.remove(i);
     else return null;
   }
-  public PhysicsObject removeObject(){//remove last object by default
-    if(objects.size()>0) return objects.remove(objects.size()-1);
-    else return null;
+  public PhysicsObject removeObject() {//remove last object by default
+    if (objects.size()>0) {
+      PhysicsObject out = objects.remove(objects.size()-1);
+      vis.updateVisualizer();
+      return out;
+    } else return null;
   }
-  
-  public void clearObjects(){
+
+  public void clearObjects() {
     objects = new ArrayList<PhysicsObject>();
+    vis.updateVisualizer();
   }
 
   public void draw() {
@@ -45,16 +51,14 @@ public class Physics {
     }
     return e;
   }
-  
-  /*
-  public void drawFieldLine(PVector start, int steps, float step){
-    if(step<1/scale.x) step = 1/scale.x;
-    stroke(Color.FIELD_LINE);
-    PVector loc = start.copy();
-    for(int i=0; i<steps; i++){
-      
+
+  public float getElectricPotential(PVector loc) {
+    float v = 0;
+    for (PhysicsObject o : objects) {
+      v += o.getElectricPotential(loc);
     }
-  }*/
+    return v;
+  }
 }
 
 
@@ -88,6 +92,7 @@ public abstract class PhysicsObject {
 
   //return the electric field at a poing
   public abstract PVector getElectricField(PVector loc);
+  public abstract float getElectricPotential(PVector loc);
 
   public abstract void draw();
 }
@@ -113,6 +118,10 @@ public class Point extends PhysicsObject {
     return r;
   }
 
+  public float getElectricPotential(PVector loc) {
+    return Constant.k * charge/dist(pos.x, pos.y, loc.x, loc.y);
+  }
+
   public void draw() {
     fill(Color.chargeColor(charge));
     noStroke();
@@ -133,7 +142,7 @@ public class Rod extends PhysicsObject {
     super(pos, mass, chargeDensity, true);
     this.length=length;
     setAngle(angle);
-    println(angle);
+    //println(angle);
   }
   //INFINITE ROD --- charge=>charge density, length = infinity
   Rod(PVector pos, float angle, float mass, float chargeDensity) {
@@ -141,10 +150,10 @@ public class Rod extends PhysicsObject {
     length = Float.POSITIVE_INFINITY;
     setAngle(angle);
   }
-  
-  public void setAngle(float theta){
-    if(theta>PI/2) theta = theta-PI;
-    if(theta<=-PI/2) theta = theta+PI;
+
+  public void setAngle(float theta) {
+    if (theta>PI/2) theta = theta-PI;
+    if (theta<=-PI/2) theta = theta+PI;
     angle = theta;
   }
 
@@ -157,7 +166,7 @@ public class Rod extends PhysicsObject {
     else return charge/length;
   }
 
-  public float[] getBounds(){//returns bounds of the rod {x1,y1,x2,y2}
+  public float[] getBounds() {//returns bounds of the rod {x1,y1,x2,y2}
     if (isInfinite()) {
       if (angle==PI/2) {
         return new float[]{pos.x, Float.NEGATIVE_INFINITY, pos.x, Float.POSITIVE_INFINITY};
@@ -173,13 +182,13 @@ public class Rod extends PhysicsObject {
     float a = -tan(angle);
     float c = tan(angle)*pos.x-pos.y;
     float dist = abs(a*loc.x+loc.y+c)/sqrt(a*a+1);
-    PVector intersect = new PVector((loc.x-a*loc.y-a*c)/(a*a+1),(a*(-loc.x+a*loc.y)-c)/(a*a+1));
+    PVector intersect = new PVector((loc.x-a*loc.y-a*c)/(a*a+1), (a*(-loc.x+a*loc.y)-c)/(a*a+1));
     //fill(0);
     //stroke(0);
-    //ellipse(vpX(intersect.x),vpY(intersect.y),5,5);
+    //ellipse(vpX(intersect.x), vpY(intersect.y), 5, 5);
     if (isInfinite()) {
       //println(a,1,c,dist, new PVector(loc.x - (loc.x-a*loc.y-a*c)/(a*a+1),loc.y - (a*(-loc.x+a*loc.y)-c)/(a*a+1)));
-      return new PVector(loc.x - intersect.x,loc.y - intersect.y).limit(2*Constant.k*charge/dist);
+      return new PVector(loc.x - intersect.x, loc.y - intersect.y).limit(2*Constant.k*charge/dist);
     } else {
       float[] bounds = getBounds();
       float[] boundsDelta = getBounds();
@@ -187,23 +196,54 @@ public class Rod extends PhysicsObject {
       boundsDelta[1]-=intersect.y;
       boundsDelta[2]-=intersect.x;
       boundsDelta[3]-=intersect.y;
-      int direction = (angle==PI/2?(loc.y>pos.y?1:-1):(loc.y>intersect.y?1:-1));
+      int direction = (angle==HALF_PI?(loc.x>pos.x?1:-1):(loc.y>intersect.y?1:-1));
       int intersection = 0;// -1 if intersect is before seg, 0 if on, 1 if after
-      if(angle == PI/2){
-        if(intersect.y < bounds[1]) intersection = -1;
-        else if(intersect.y > bounds[3]) intersection = 1;
+      if (angle == PI/2) {
+        if (intersect.y < bounds[1]) intersection = -1;
+        else if (intersect.y > bounds[3]) intersection = 1;
+      } else {
+        if (intersect.x < bounds[0]) intersection = -1;
+        else if (intersect.x > bounds[2]) intersection = 1;
       }
-      else{
-        if(intersect.x < bounds[0]) intersection = -1;
-        else if(intersect.x > bounds[2]) intersection = 1;
-      }
-      float[] l = new float[]{(intersection>=0?-1:1)*sqrt(boundsDelta[0]*boundsDelta[0]+boundsDelta[1]*boundsDelta[1]),(intersection>0?-1:1)*sqrt(boundsDelta[2]*boundsDelta[2]+boundsDelta[3]*boundsDelta[3])};
-      
+      float[] l = new float[]{(intersection>=0?-1:1)*sqrt(boundsDelta[0]*boundsDelta[0]+boundsDelta[1]*boundsDelta[1]), (intersection>0?-1:1)*sqrt(boundsDelta[2]*boundsDelta[2]+boundsDelta[3]*boundsDelta[3])};
+
       //x&y magnitudes of the field (relative to the rod)
       float eY = direction*(Constant.k*charge/dist) * (l[1]/sqrt(l[1]*l[1]+dist*dist) - l[0]/sqrt(l[0]*l[0]+dist*dist));
       float eX = (Constant.k*charge) * (1/sqrt(l[1]*l[1]+dist*dist) - 1/sqrt(l[0]*l[0]+dist*dist));
-      //float eX = 0;
-      return new PVector(eX,eY).rotate(angle);
+
+      return new PVector(eX, eY).rotate(angle);
+    }
+  }
+
+  public float getElectricPotential(PVector loc) {
+    float a = -tan(angle);
+    float c = tan(angle)*pos.x-pos.y;
+    float dist = abs(a*loc.x+loc.y+c)/sqrt(a*a+1);
+    PVector intersect = new PVector((loc.x-a*loc.y-a*c)/(a*a+1), (a*(-loc.x+a*loc.y)-c)/(a*a+1));
+    if (isInfinite()) {
+      //return (2*Constant.k*charge*log(dist+1));
+      return 0.0;
+    } else {
+      float[] bounds = getBounds();
+      float[] boundsDelta = getBounds();
+      boundsDelta[0]-=intersect.x;
+      boundsDelta[1]-=intersect.y;
+      boundsDelta[2]-=intersect.x;
+      boundsDelta[3]-=intersect.y;
+      int intersection = 0;// -1 if intersect is before seg, 0 if on, 1 if after
+      if (angle == PI/2) {
+        if (intersect.y < bounds[1]) intersection = -1;
+        else if (intersect.y > bounds[3]) intersection = 1;
+      } else {
+        if (intersect.x < bounds[0]) intersection = -1;
+        else if (intersect.x > bounds[2]) intersection = 1;
+      }
+      
+      
+      float distA = sqrt(boundsDelta[0]*boundsDelta[0]+boundsDelta[1]*boundsDelta[1]);
+      float distB = sqrt(boundsDelta[2]*boundsDelta[2]+boundsDelta[3]*boundsDelta[3]);
+      //println(dist,(intersection>=0?-1:1)*distA, (intersection>0?-1:1)*distB);
+      return Constant.k * charge * log(((intersection>0?-1:1)*distB + sqrt(distB*distB+dist*dist))/((intersection>=0?-1:1)*distA + sqrt(distA*distA+dist*dist)));
     }
   }
 

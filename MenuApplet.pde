@@ -20,7 +20,7 @@ public class MenuApplet extends PApplet {
     surface.setTitle("Menu");
     data = new float[10];
     
-    mainSelector = new SelectorPanel(0, 0, width/4, height, true, "Draw\nCharges", "Edit", "Filters"){
+    mainSelector = new SelectorPanel(0, 0, width/4, height, true, "Draw\nCharges", "Edit", "Filters", "Graph"){
       @Override
       public void mouseClicked() {
         if (x<mouseX && mouseX<x+w && y<mouseY && mouseY<y+h) {
@@ -48,9 +48,46 @@ public class MenuApplet extends PApplet {
     menuMap = new HashMap<String,MenuObject>();
     menuMap.put("draw/charge",new SelectorPanel(0,height/16,0.75*width,height/8,false,"Negative","Positive"));
     menuMap.put("draw/shape",new SelectorPanel(0,height/16,0.75*width,height/4,2,"Point\nCharge","Charged\nRod","Infinite\nRod"));
-    menuMap.put("filter/type",new SelectorPanel(0,height/16,0.75*width,height/8,false,"Electric\nField","Electric\nPotential"));
-    menuMap.put("filter/definition",new SelectorPanel(0,height/16,0.75*width,height/8,3,"OFF","Low","High"));
-    //menuMap.get("filter/definition").setValue(1);
+    menuMap.put("filter/type",new SelectorPanel(0,height/16,0.75*width,height/8,false,"Electric\nField","Electric\nPotential"){
+      @Override
+      public void mouseClicked(){
+        int saveSelect = select;
+        super.mouseClicked();
+        if(saveSelect!=select) vis.updateVisualizer();
+      }
+    });
+    menuMap.put("filter/definition",new SelectorPanel(0,height/16,0.75*width,height/8,3,"OFF","Low","High"){
+      @Override
+      public void mouseClicked(){
+        int saveSelect = select;
+        super.mouseClicked();
+        if(saveSelect!=select) vis.updateVisualizer();
+      }
+    });
+    menuMap.put("graph/new", new SelectorPanel(0.05*width,height/16,0.65*width,height/8,false,"+"){
+      final int MAX_GRAPHS = 4;
+      
+      @Override
+      public void setValue(int val){
+        if(val==labels.length-1){
+          if(val+1<MAX_GRAPHS){
+            String[] newLabels = new String[labels.length+1];
+            for(int i=0; i<newLabels.length-1; i++){
+              newLabels[i] = i+1+"";
+            }
+            newLabels[newLabels.length-1] = "+";
+            labels = newLabels;
+            columns++;
+            printArray(super.labels);
+          } else {
+            labels[labels.length-1] = ""+MAX_GRAPHS;
+          }
+        }
+        super.setValue(val);
+        
+      }
+    });
+    menuMap.get("graph/new").setValue(-1);
     
     mainGroups = new MenuGroup[]{
       new MenuGroup(width/4,0,
@@ -64,6 +101,7 @@ public class MenuApplet extends PApplet {
         )
       ),
       null,
+      //Visualizer
       new MenuGroup(width/4,0,
         new MenuGroup(0,0,
           new MenuText("Display Type",0.75*width/2,height/32,Color.Menu.TEXT),
@@ -73,6 +111,17 @@ public class MenuApplet extends PApplet {
           new MenuText("Quality",0.75*width/2,height/32,Color.Menu.TEXT),
           menuMap.get("filter/definition")
         )
+      ),
+      //Graph
+      new MenuGroup(width/4,0,
+        new MenuGroup(0,0,
+          new MenuText("Graph",0.75*width/2,height/32,Color.Menu.TEXT),
+          menuMap.get("graph/new")
+        )//,
+      //  new MenuGroup(0,height/4,
+      //    new MenuText("Quality",0.75*width/2,height/32,Color.Menu.TEXT),
+      //    menuMap.get("filter/definition")
+      //  )
       )
     };
   }
@@ -238,7 +287,7 @@ public class MenuApplet extends PApplet {
           float x = this.x+dx*(i%columns);
           float y = this.y+dy*(i/columns);
           if(x<mouseX && mouseX<x+dx && y<mouseY && mouseY<y+dy){
-            select = i;
+            setValue(i);
           }
         }
       }
@@ -253,7 +302,11 @@ public class MenuApplet extends PApplet {
       return select;
     }
     public void setValue(int val){
-      select = val%labels.length;
+      if(val>=0)
+        select = val%labels.length;
+      else
+        select = val;
+      println(this,select);
     }
   }
   private class MenuText extends MenuObject{

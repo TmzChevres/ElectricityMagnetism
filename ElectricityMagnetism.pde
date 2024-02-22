@@ -45,6 +45,11 @@ void draw() {
   //draw simulation & visualization
   sim.draw();
   image(vis.getVis(), 0, 0);
+  vis.draw();
+  //println(sim.getElectricPotential(mousePos));
+  float potential = sim.getElectricPotential(mousePos);
+  float lerp = ((-log10(abs(potential)))-8)/(10-8);
+  //println(lerp);
   
   //stroke(0);
   //line(mouseX,mouseY,mouseX+sim.getElectricField(mousePos).normalize().x*20,mouseY-sim.getElectricField(mousePos).normalize().y*20);
@@ -88,6 +93,7 @@ void mouseWheel(MouseEvent event) {
     PVector newPos = new PVector(scX(mouseX), scY(mouseY));
     newPos.sub(mousePos);
     center.sub(newPos);
+    vis.updateVisualizer();
   }
 }
   
@@ -95,6 +101,7 @@ void mouseDragged() {
   //move center point on dragg
   center.x -= (mouseX-pmouseX)/scale.x;
   center.y += (mouseY-pmouseY)/scale.y;
+  vis.updateVisualizer();
 }
 
 void mouseClicked() {
@@ -156,21 +163,27 @@ void keyPressed() {
     switch(keyCode) {
     case UP:
       center.y+=2/scale.y;
+      vis.updateVisualizer();
       break;
     case DOWN:
       center.y-=2/scale.y;
+      vis.updateVisualizer();
       break;
     case RIGHT:
       center.x+=2/scale.x;
+      vis.updateVisualizer();
       break;
     case LEFT:
       center.x-=2/scale.x;
+      vis.updateVisualizer();
       break;
     case 33://PAGE UP
       scale.mult(1.05);
+      vis.updateVisualizer();
       break;
     case 34://PAGE DOWN
       scale.mult(0.95);
+      vis.updateVisualizer();
       break;
       
     //case SHIFT:
@@ -217,6 +230,7 @@ void keyPressed() {
       
       case 'o'://recenter origin
         center.set(0, 0);
+        vis.updateVisualizer();
         break;
         
       case DELETE:

@@ -39,6 +39,10 @@ public float log10 (float x) {
   return (log(x) / log(10));
 }
 
+public float roundMultiple(float val, float mult){
+  return round(val / mult) * mult;
+}
+
 
 //return exponent of the largest/smalles order of magnitude completely visible and discrete in the current simulation viewport
 public PVector minVisibleMagnitude(){

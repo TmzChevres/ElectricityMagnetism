@@ -1,0 +1,7 @@
+class GraphManager{
+
+}
+
+class Graph{
+
+}

@@ -8,6 +8,9 @@ public static class Color {
   public final static color CHARGE_NEG = #0000FF;
 
   public final static color FIELD_LINE = #FF8000;
+  public final static color EQUIPOTENTIAL_LINE = #00CAFF;
+  public final static color POTENTIAL_POS = #00FF00;
+  public final static color POTENTIAL_NEG = #FF00FF;
 
   public final static class Menu {
     public final static color UNSELECTED = #666666;
