@@ -64,13 +64,13 @@ public class MenuApplet extends PApplet {
         if(saveSelect!=select) vis.updateVisualizer();
       }
     });
-    menuMap.put("graph/new", new SelectorPanel(0.05*width,height/16,0.65*width,height/8,false,"+"){
-      final int MAX_GRAPHS = 4;
+    menuMap.put("plot/new", new SelectorPanel(0.05*width,height/16,0.65*width,height/8,false,"+"){
+      final int MAX_PLOTS = 4;
       
       @Override
       public void setValue(int val){
         if(val==labels.length-1){
-          if(val+1<MAX_GRAPHS){
+          if(val+1<MAX_PLOTS){
             String[] newLabels = new String[labels.length+1];
             for(int i=0; i<newLabels.length-1; i++){
               newLabels[i] = i+1+"";
@@ -80,14 +80,14 @@ public class MenuApplet extends PApplet {
             columns++;
             printArray(super.labels);
           } else {
-            labels[labels.length-1] = ""+MAX_GRAPHS;
+            labels[labels.length-1] = ""+MAX_PLOTS;
           }
         }
         super.setValue(val);
         
       }
     });
-    menuMap.get("graph/new").setValue(-1);
+    menuMap.get("plot/new").setValue(-1);
     
     mainGroups = new MenuGroup[]{
       new MenuGroup(width/4,0,
@@ -116,7 +116,7 @@ public class MenuApplet extends PApplet {
       new MenuGroup(width/4,0,
         new MenuGroup(0,0,
           new MenuText("Graph",0.75*width/2,height/32,Color.Menu.TEXT),
-          menuMap.get("graph/new")
+          menuMap.get("plot/new")
         )//,
       //  new MenuGroup(0,height/4,
       //    new MenuText("Quality",0.75*width/2,height/32,Color.Menu.TEXT),

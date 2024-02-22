@@ -1,7 +1,7 @@
-class GraphManager{
+class PlotManager{
 
 }
 
-class Graph{
+class Plot{
 
 }
